@@ -80,6 +80,9 @@ class Orchestrator:
 
     async def start(self) -> None:
         await self._db.start()
+        if self._config.plugin.relations_only:
+            self._registry.create_task(self._relation_heartbeat(), name="relation.heartbeat")
+            return
         await self._recovery_check()
         self._registry.create_task(self._run(), name="orchestrator.main")
         self._registry.create_task(self._heartbeat(), name="orchestrator.heartbeat")
@@ -88,6 +91,17 @@ class Orchestrator:
         # 先 cancel 所有任务（停止产生新写操作），再 drain DB queue
         await self._registry.cancel_all()
         await self._db.stop()
+
+    async def _relation_heartbeat(self) -> None:
+        while True:
+            await asyncio.sleep(self._config.heartbeat.interval_seconds)
+            try:
+                await self._relation.flush_dirty_impressions()
+                await self._db.maybe_checkpoint()
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("Relation heartbeat failed")
 
     async def _run(self) -> None:
         """主循环：精确 sleep_until next_transition，醒来后校验漂移。"""

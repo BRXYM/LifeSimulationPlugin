@@ -64,7 +64,16 @@ class LifeSimulationPlugin(MaiBotPlugin):
         await self._orchestrator.start()
         self.ctx.logger.info("Life Simulation Plugin v2.0 loaded")
 
+    def get_components(self) -> list[dict]:
+        components = super().get_components()
+        if self.config.plugin.relations_only:
+            allowed = {"life_sim_interaction_observer", "get_person_impression", "life_sim.get_impression"}
+            return [c for c in components if c["name"] in allowed]
+        return components
+
     async def on_unload(self) -> None:
+        if hasattr(self, "_registry"):
+            await self._registry.cancel_all()
         if hasattr(self, "_orchestrator"):
             await self._orchestrator.stop()
         self.ctx.logger.info("Life Simulation Plugin unloaded")
@@ -98,7 +107,19 @@ class LifeSimulationPlugin(MaiBotPlugin):
         order=HookOrder.NORMAL,
     )
     async def _hook_observe_interaction(self, **kwargs) -> None:
-        await hook_logic.observe_interaction(self._relation, self._registry, **kwargs)
+        # 当前 Host 的 Hook 使用 message_info 和正式 session_id，不能自行计算聊天流 ID。
+        message = kwargs.get("message") or {}
+        info = message.get("message_info") or {}
+        user = info.get("user_info") or {}
+        if info.get("group_info") or message.get("is_notify") or message.get("is_command"):
+            return
+        stream_id = message.get("session_id")
+        user_id = str(user.get("user_id") or "")
+        if not stream_id or not user_id:
+            return
+        person_id = await self.ctx.person.get_id(message.get("platform", "qq"), user_id)
+        if person_id:
+            self._registry.create_task(self._relation.mark_interaction(person_id, stream_id, message), name="relation.observe")
 
     # ── Tools ──────────────────────────────────────────────────────────────
 

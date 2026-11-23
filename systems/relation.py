@@ -48,6 +48,7 @@ class RelationSystem:
         self._ctx = ctx
         self._budget = budget
         self._config = config
+        self._person_names: dict[str, str] = {}
         self._dirty_queue = DirtyQueue(
             max_size=getattr(config, "dirty_queue_max_size", 500),
             ttl_seconds=getattr(config, "dirty_queue_ttl_seconds", 7200),
@@ -58,6 +59,9 @@ class RelationSystem:
     ) -> None:
         """Hook 触发：记录互动，标记 dirty。纯写操作，不调用 LLM。"""
         try:
+            user = (message.get("message_info") or {}).get("user_info") or {}
+            if user.get("user_nickname"):
+                self._person_names[person_id] = str(user["user_nickname"])
             await self._db.update_person_stream(person_id, stream_id, time.time())
             await self._db.mark_dirty(person_id)
             self._dirty_queue.mark(person_id, stream_id)
@@ -98,7 +102,7 @@ class RelationSystem:
                     chat_id=stream_id, limit=20
                 )
 
-                person_name = imp["person_name"] if imp else person_id
+                person_name = self._person_names.get(person_id) or (imp["person_name"] if imp else person_id)
                 old_imp_str = str({
                     "traits": imp.get("traits", []),
                     "affinity": imp.get("affinity", 0.5),

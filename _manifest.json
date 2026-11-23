@@ -12,9 +12,25 @@
   "urls": {
     "repository": "https://github.com/SkonJIYHD/LifeSimulationPlugin"
   },
-  "host_application": {"min_version": "1.0.0", "max_version": "1.99.99"},
-  "sdk": {"min_version": "2.0.0", "max_version": "2.99.99"},
-  "capabilities": ["send_message"],
+  "host_application": {
+    "min_version": "1.0.0",
+    "max_version": "1.99.99"
+  },
+  "sdk": {
+    "min_version": "2.0.0",
+    "max_version": "2.99.99"
+  },
+  "capabilities": [
+    "llm.generate",
+    "message.get_recent",
+    "person.get_id",
+    "person.get_id_by_name",
+    "person.get_value",
+    "send.text",
+    "frequency.set_adjust",
+    "maisaka.proactive.trigger",
+    "chat.get_group_streams"
+  ],
   "dependencies": [
     {
       "type": "python_package",

@@ -10,6 +10,8 @@ class PluginSection(PluginConfigBase):
     __ui_label__ = "基础设置"
 
     enabled: bool = Field(default=True, description="是否启用插件")
+    config_version: str = Field(default="2.0.1", description="配置版本")
+    relations_only: bool = Field(default=True, description="与 MaiTrace 共存：仅运行人物印象，不运行另一套作息、睡眠拦截或主动消息")
     timezone: str = Field(default="Asia/Shanghai", description="时区（如 Asia/Shanghai）")
     max_recent_events: int = Field(default=20, description="内存中保留的最近事件条数")
 
