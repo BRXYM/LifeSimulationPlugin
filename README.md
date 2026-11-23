@@ -1,5 +1,13 @@
 # Life Simulation Plugin v2.0
 
+## 本地修改说明（2026-11-24）
+
+新增默认开启的 `relations_only`。开启后只运行关系维护和人物印象刷新，作息、睡眠拦截和主动消息由其他组件负责。配置与后台任务分别在 `config_model.py` 和 `core/orchestrator.py`。
+
+使用私聊事件的真实会话 ID 记录互动，写人物印象时优先使用来信里的昵称。事件入口在 `plugin.py`，人物关系处理在 `systems/relation.py`，用到的宿主接口列在 `_manifest.json`。
+
+对应功能提交 `83dfd7c`。[本地修改分支 local-maibot](https://github.com/BRXYM/LifeSimulationPlugin/tree/local-maibot)
+
 让 MaiBot 更拟人的插件：有自己的日程、会因为"在忙"减少发言、被问时根据当前状态 AI 生成回答、偶尔主动发消息、对群里的人形成印象和关系。
 
 [![许可证](https://img.shields.io/badge/License-AGPL--3.0-green.svg)](/LICENSE)
